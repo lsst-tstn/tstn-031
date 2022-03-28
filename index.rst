@@ -10,7 +10,10 @@
    Some of the steps described here are required to setup the environment and won't need to be repeated on the verification step.
 
 This milestone consists of driving the MTAOS to process simulated Corner Rafts data, compute the associated corrections and applying those corrections to the AOS components (Camera Hexapod, M2 Hexapod, M1M3 and M2).
-After the process is completed the results are verified from a jupyter notebook.
+After the process is completed the results are inspected from a jupyter notebook.
+
+It is important to emphasize that here we are more interested in verifying the control flow and not necessarily the results of the execution.
+Validation of the values can be done as an additional exercice, and requires some knowledge of the details of both the `WEP <ts-wep.lsst.io>`__ and `OFC <ts-ofc.lsst.io>`__.
 
 The process was executed at the Tucson Test Stand (TTS), using a mix of simulators (for the hardware components) and non-simulators (for pure software components).
 In addition, a set of simulated LSSTCam data was provided
@@ -126,7 +129,7 @@ All these steps are executed in the section :ref:`setting-up-the-system` of the 
 
 The next step is to command the MTAOS to process the corner wavefront sensors from the image we ingested in the butler.
 In order to execute this step we need to provide the `visitId` of the exposure along with a configuration for the wavefront estimation pipeline (WEP).
-This step is executef in the :ref:`processing-data-with-runwep-command` section of the notebook.
+This step is executed in the :ref:`processing-data-with-runwep-command` section of the notebook.
 After the ``runWEP`` command is executed we also verify that the expected set of events were published.
 
 After the corner wavefront sensors are processed, we instruct the MTAOS to process the results through the optical feedback control (OFC) algorithm.

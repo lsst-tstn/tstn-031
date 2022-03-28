@@ -6,6 +6,10 @@ Integration Milestone Pf
 This notebooks executes IMpf. Details about the milestone, execution and
 verification can be found in `tstn-031 <https://tstn-031.lsst.io>`__.
 
+Keep in mind that in this execution we are more interested in the control flow, making sure that the expected data is published by the CSC, rather than validating that the data makes sense.
+Analysing the data and verifying that it has the expected values is a somewhat more involved tasks and requires some knowledge of the details of the `wavefront estimatimation pipeline <https://ts-wep.lsst.io>`__ and the `optical feedback control <https://ts-ofc.lsst.io>`__ algorithm.
+These will, most likely, be part of a separate activity.
+
 .. code:: ipython3
 
     import os
@@ -570,7 +574,9 @@ so we can plot them afterwards.
 Run OFC
 -------
 
-…
+Once the wavefront estimatimation pipeline is complete, we can compute the associated corrections.
+
+This is done as a separate step to allow users to inspect the zernike coeffients and decide if they want to continue computing the corrections, and later, apply those corrections (also as a separate step).
 
 .. code:: ipython3
 
@@ -689,8 +695,8 @@ Degrees of Freedom
 
 --------------
 
-M2 Hexapod
-~~~~~~~~~~
+M2 Hexapod Corrections
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -752,8 +758,8 @@ M2 Hexapod
 
 --------------
 
-Camera Hexapod
-~~~~~~~~~~~~~~
+Camera Hexapod Corrections
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -819,8 +825,8 @@ Camera Hexapod
 
 --------------
 
-M1M3
-~~~~
+M1M3 Corrections
+~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -925,8 +931,8 @@ M1M3
 
 --------------
 
-M2
-~~
+M2 Corrections
+~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -1029,5 +1035,96 @@ executed the steps in `Setup M1M3 <#Setup-M1M3>`__.
 
     <ddsutil.MTAOS_ackcmd_fd03e870 at 0x7fce73e90ca0>
 
+Finalizing
+==========
 
+Once the test is complete you may to reset the system to its original
+state.
 
+This in general mean, reseting the forces on M1M3 and M2, the offsets in
+the Camera and M2 Hexapods and re-configuring the MTAOS with the
+original configuration.
+
+Nonte that there is also a step to lower m1m3. If you intend to continue
+exercicing the system, you may want to sky this step, especially if
+executing at the summit.
+
+The following cells will execute this procedure, and leave the system in
+ENABLED state, which is the default for TTS and in general when
+executing continuous tests at the summit as well.
+
+--------------
+
+Reset M1M3
+~~~~~~~~~~
+
+.. code:: ipython3
+
+    await mtcs.reset_m1m3_forces()
+
+.. container:: alert alert-block alert-warning
+
+   Skip this next cell if you plan to continue using the system for
+   other tests.
+
+.. code:: ipython3
+
+    await mtcs.lower_m1m3()
+
+--------------
+
+Reset M2
+~~~~~~~~
+
+.. code:: ipython3
+
+    await mtcs.reset_m2_forces()
+
+--------------
+
+Reset Camera Hexapod
+~~~~~~~~~~~~~~~~~~~~
+
+.. code:: ipython3
+
+    await mtcs.reset_camera_hexapod_position()
+
+--------------
+
+Reset M2 Hexapod
+~~~~~~~~~~~~~~~~
+
+The following cells will enable compensation mode and reset the position
+of the M2 Hexapod.
+
+.. code:: ipython3
+
+    await mtcs.reset_m2_hexapod_position()
+
+--------------
+
+Reset MTAOS
+~~~~~~~~~~~
+
+To execute IMpf we need to load a special configuration on the MTAOS.
+This configuration will make sure the MTAOS is reading data from a
+butler instance that was previously prepared for the test, and will also
+make sure the MTAOS is configured for processing LSSTCam Corner
+Wavefront Sensor data.
+
+We start the process by first sending the MTAOS to STANDBY then sending
+it back to ENABLED with the required configuration.
+
+.. code:: ipython3
+
+    await mtcs.set_state(
+        state=salobj.State.STANDBY,
+        components=["mtaos"]
+    )
+
+.. code:: ipython3
+
+    await mtcs.set_state(
+        state=salobj.State.ENABLED,
+        components=["mtaos"]
+    )
